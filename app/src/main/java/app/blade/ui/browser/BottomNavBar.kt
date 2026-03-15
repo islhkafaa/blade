@@ -9,13 +9,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tab
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,8 +36,12 @@ fun BottomNavBar(
     onBack: () -> Unit,
     onForward: () -> Unit,
     onTabsClick: () -> Unit,
+    onHistoryClick: () -> Unit,
+    onBookmarksClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -80,12 +93,34 @@ fun BottomNavBar(
                 )
             }
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = { showMenu = true }) {
                 Icon(
-                    imageVector = Icons.Default.ContentCopy,
+                    imageVector = Icons.Default.MoreVert,
                     contentDescription = "Menu",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Bookmarks") },
+                        onClick = {
+                            showMenu = false
+                            onBookmarksClick()
+                        },
+                        leadingIcon = { Icon(Icons.Default.Star, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("History") },
+                        onClick = {
+                            showMenu = false
+                            onHistoryClick()
+                        },
+                        leadingIcon = { Icon(Icons.Default.History, contentDescription = null) }
+                    )
+                }
             }
         }
     }

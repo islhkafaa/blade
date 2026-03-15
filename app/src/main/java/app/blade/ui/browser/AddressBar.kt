@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Http
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,8 +40,10 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AddressBar(
     displayUrl: String,
+    isBookmarked: Boolean,
     isLoading: Boolean,
     onUrlSubmitted: (String) -> Unit,
+    onBookmarkToggle: () -> Unit,
     onReload: () -> Unit,
     onStop: () -> Unit,
     modifier: Modifier = Modifier
@@ -56,6 +60,17 @@ fun AddressBar(
         tonalElevation = 2.dp
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBookmarkToggle) {
+                Icon(
+                    imageVector = if (isBookmarked) Icons.Default.Star else Icons.Default.StarOutline,
+                    contentDescription = "Bookmark",
+                    tint = if (isBookmarked)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             Icon(
                 imageVector = if (displayUrl.startsWith("www.google.com/search") || !displayUrl.startsWith(
                         "www"
