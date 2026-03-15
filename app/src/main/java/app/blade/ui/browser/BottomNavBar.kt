@@ -26,6 +26,7 @@ fun BottomNavBar(
     canGoForward: Boolean,
     onBack: () -> Unit,
     onForward: () -> Unit,
+    onTabsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -71,7 +72,7 @@ fun BottomNavBar(
                 )
             }
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onTabsClick) {
                 Icon(
                     imageVector = Icons.Default.Tab,
                     contentDescription = "Tabs",

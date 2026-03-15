@@ -11,16 +11,49 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BrowserViewModel @Inject constructor() : ViewModel() {
-    private val _state = MutableStateFlow(BrowserState())
-    val state: StateFlow<BrowserState> = _state.asStateFlow()
+
+    private val _tabs = MutableStateFlow(listOf(TabInfo()))
+    val tabs: StateFlow<List<TabInfo>> = _tabs.asStateFlow()
+
+    private val _activeTabId = MutableStateFlow(_tabs.value.first().id)
+    val activeTabId: StateFlow<String> = _activeTabId.asStateFlow()
+
+    private val _isTabSwitcherVisible = MutableStateFlow(false)
+    val isTabSwitcherVisible: StateFlow<Boolean> = _isTabSwitcherVisible.asStateFlow()
+
+    fun createNewTab(url: String? = "https://www.google.com") {
+        val newTab = TabInfo(state = BrowserState(url = url ?: "https://www.google.com"))
+        _tabs.update { it + newTab }
+        _activeTabId.value = newTab.id
+        _isTabSwitcherVisible.value = false
+    }
+
+    fun closeTab(tabId: String) {
+        _tabs.update { tabs ->
+            val updated = tabs.filter { it.id != tabId }
+            updated.ifEmpty { listOf(TabInfo()) }
+        }
+        if (_activeTabId.value == tabId) {
+            _activeTabId.value = _tabs.value.last().id
+        }
+    }
+
+    fun switchTab(tabId: String) {
+        _activeTabId.value = tabId
+        _isTabSwitcherVisible.value = false
+    }
+
+    fun toggleTabSwitcher() {
+        _isTabSwitcherVisible.update { !it }
+    }
 
     fun onUrlInputSubmitted(input: String) {
         val normalized = normalizeInput(input)
-        _state.update { it.copy(url = normalized) }
+        updateActiveTab { it.copy(url = normalized) }
     }
 
     fun onPageStarted(url: String) {
-        _state.update {
+        updateActiveTab {
             it.copy(
                 url = url,
                 displayUrl = extractDisplayUrl(url),
@@ -31,7 +64,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onPageFinished(url: String, webView: WebView) {
-        _state.update {
+        updateActiveTab {
             it.copy(
                 url = url,
                 displayUrl = extractDisplayUrl(url),
@@ -44,39 +77,32 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onProgressChanged(progress: Int) {
-        _state.update { it.copy(progress = progress) }
+        updateActiveTab { it.copy(progress = progress) }
     }
 
     fun onTitleReceived(title: String) {
-        _state.update { it.copy(title = title) }
+        updateActiveTab { it.copy(title = title) }
     }
 
     fun goBack(webView: WebView) {
         if (webView.canGoBack()) {
             webView.goBack()
-            _state.update {
-                it.copy(
-                    canGoBack = webView.canGoBack(),
-                    canGoForward = webView.canGoForward()
-                )
-            }
         }
     }
 
     fun goForward(webView: WebView) {
         if (webView.canGoForward()) {
             webView.goForward()
-            _state.update {
-                it.copy(
-                    canGoBack = webView.canGoBack(),
-                    canGoForward = webView.canGoForward()
-                )
-            }
         }
     }
 
-    fun reload(webView: WebView) {
-        webView.reload()
+    private fun updateActiveTab(transform: (BrowserState) -> BrowserState) {
+        val currentId = _activeTabId.value
+        _tabs.update { tabs ->
+            tabs.map { tab ->
+                if (tab.id == currentId) tab.copy(state = transform(tab.state)) else tab
+            }
+        }
     }
 
     private fun normalizeInput(input: String): String {
