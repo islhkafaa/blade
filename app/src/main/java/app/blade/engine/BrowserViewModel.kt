@@ -4,6 +4,7 @@ import android.webkit.WebView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.blade.data.BrowserRepository
+import app.blade.data.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +15,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BrowserViewModel @Inject constructor(
-    private val repository: BrowserRepository
+    private val repository: BrowserRepository,
+    private val settingsRepository: SettingsRepository,
+    private val downloadManager: DownloadManager
 ) : ViewModel() {
 
     private val _tabs = MutableStateFlow(listOf(TabInfo()))
@@ -32,16 +35,43 @@ class BrowserViewModel @Inject constructor(
     private val _isBookmarksVisible = MutableStateFlow(false)
     val isBookmarksVisible: StateFlow<Boolean> = _isBookmarksVisible.asStateFlow()
 
+    private val _isSettingsVisible = MutableStateFlow(false)
+    val isSettingsVisible: StateFlow<Boolean> = _isSettingsVisible.asStateFlow()
+
     val history = repository.allHistory
     val bookmarks = repository.allBookmarks
+    val settingsRepo = settingsRepository
 
-    fun createNewTab(url: String? = "https://www.google.com") {
-        val newTab = TabInfo(state = BrowserState(url = url ?: "https://www.google.com"))
-        _tabs.update { it + newTab }
-        _activeTabId.value = newTab.id
+    private var currentSearchEngine = SettingsRepository.VAL_SEARCH_GOOGLE
+
+    init {
+        viewModelScope.launch {
+            settingsRepository.getSetting(SettingsRepository.KEY_SEARCH_ENGINE, SettingsRepository.VAL_SEARCH_GOOGLE)
+                .collect { currentSearchEngine = it }
+        }
+    }
+
+    fun createNewTab(url: String? = null) {
+        viewModelScope.launch {
+            val homepage = if (url == null) {
+                var hp = "https://www.google.com"
+                settingsRepository.getSetting(SettingsRepository.KEY_HOME_PAGE, "https://www.google.com")
+                    .collect { hp = it }
+                hp
+            } else url
+
+            val newTab = TabInfo(state = BrowserState(url = homepage))
+            _tabs.update { it + newTab }
+            _activeTabId.value = newTab.id
+            hideAllOverlays()
+        }
+    }
+
+    private fun hideAllOverlays() {
         _isTabSwitcherVisible.value = false
         _isHistoryVisible.value = false
         _isBookmarksVisible.value = false
+        _isSettingsVisible.value = false
     }
 
     fun closeTab(tabId: String) {
@@ -56,9 +86,7 @@ class BrowserViewModel @Inject constructor(
 
     fun switchTab(tabId: String) {
         _activeTabId.value = tabId
-        _isTabSwitcherVisible.value = false
-        _isHistoryVisible.value = false
-        _isBookmarksVisible.value = false
+        hideAllOverlays()
     }
 
     fun toggleTabSwitcher() {
@@ -66,6 +94,7 @@ class BrowserViewModel @Inject constructor(
         if (_isTabSwitcherVisible.value) {
             _isHistoryVisible.value = false
             _isBookmarksVisible.value = false
+            _isSettingsVisible.value = false
         }
     }
 
@@ -74,6 +103,7 @@ class BrowserViewModel @Inject constructor(
         if (_isHistoryVisible.value) {
             _isTabSwitcherVisible.value = false
             _isBookmarksVisible.value = false
+            _isSettingsVisible.value = false
         }
     }
 
@@ -82,6 +112,16 @@ class BrowserViewModel @Inject constructor(
         if (_isBookmarksVisible.value) {
             _isTabSwitcherVisible.value = false
             _isHistoryVisible.value = false
+            _isSettingsVisible.value = false
+        }
+    }
+
+    fun toggleSettings() {
+        _isSettingsVisible.update { !it }
+        if (_isSettingsVisible.value) {
+            _isTabSwitcherVisible.value = false
+            _isHistoryVisible.value = false
+            _isBookmarksVisible.value = false
         }
     }
 
@@ -162,6 +202,16 @@ class BrowserViewModel @Inject constructor(
         }
     }
 
+    fun downloadFile(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
+        downloadManager.downloadFile(url, userAgent, contentDisposition, mimeType)
+    }
+
+    fun updateSetting(key: String, value: String) {
+        viewModelScope.launch {
+            settingsRepository.saveSetting(key, value)
+        }
+    }
+
     private fun updateActiveTab(transform: (BrowserState) -> BrowserState) {
         val currentId = _activeTabId.value
         _tabs.update { tabs ->
@@ -176,7 +226,7 @@ class BrowserViewModel @Inject constructor(
         return when {
             trimmed.startsWith("http://") || trimmed.startsWith("https://") -> trimmed
             trimmed.contains(".") && !trimmed.contains(" ") -> "https://$trimmed"
-            else -> "https://www.google.com/search?q=${trimmed.replace(" ", "+")}"
+            else -> "$currentSearchEngine${trimmed.replace(" ", "+")}"
         }
     }
 

@@ -52,6 +52,9 @@ fun WebViewContainer(
                 onProgressChanged = { p -> viewModel.onProgressChanged(p) },
                 onTitleReceived = { t -> viewModel.onTitleReceived(t) }
             )
+            setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+                viewModel.downloadFile(url, userAgent, contentDisposition, mimeType)
+            }
         }
     }
 

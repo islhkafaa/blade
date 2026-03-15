@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tab
 import androidx.compose.material3.DropdownMenu
@@ -38,6 +39,7 @@ fun BottomNavBar(
     onTabsClick: () -> Unit,
     onHistoryClick: () -> Unit,
     onBookmarksClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -119,6 +121,14 @@ fun BottomNavBar(
                             onHistoryClick()
                         },
                         leadingIcon = { Icon(Icons.Default.History, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Settings") },
+                        onClick = {
+                            showMenu = false
+                            onSettingsClick()
+                        },
+                        leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) }
                     )
                 }
             }

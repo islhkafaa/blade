@@ -29,6 +29,7 @@ import app.blade.engine.BrowserViewModel
 import app.blade.ui.tabs.TabSwitcherScreen
 import app.blade.ui.history.HistoryScreen
 import app.blade.ui.bookmarks.BookmarksScreen
+import app.blade.ui.settings.SettingsScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -40,6 +41,7 @@ fun BrowserScreen(
     val isTabSwitcherVisible by viewModel.isTabSwitcherVisible.collectAsStateWithLifecycle()
     val isHistoryVisible by viewModel.isHistoryVisible.collectAsStateWithLifecycle()
     val isBookmarksVisible by viewModel.isBookmarksVisible.collectAsStateWithLifecycle()
+    val isSettingsVisible by viewModel.isSettingsVisible.collectAsStateWithLifecycle()
 
     val historyItems by viewModel.history.collectAsStateWithLifecycle(initialValue = emptyList())
     val bookmarkItems by viewModel.bookmarks.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -54,6 +56,7 @@ fun BrowserScreen(
         isTabSwitcherVisible -> ScreenType.TabSwitcher
         isHistoryVisible -> ScreenType.History
         isBookmarksVisible -> ScreenType.Bookmarks
+        isSettingsVisible -> ScreenType.Settings
         else -> ScreenType.Browser
     }
 
@@ -62,6 +65,7 @@ fun BrowserScreen(
             is ScreenType.TabSwitcher -> viewModel.toggleTabSwitcher()
             is ScreenType.History -> viewModel.toggleHistory()
             is ScreenType.Bookmarks -> viewModel.toggleBookmarks()
+            is ScreenType.Settings -> viewModel.toggleSettings()
             is ScreenType.Browser -> webViews[activeTabId]?.goBack()
         }
     }
@@ -104,7 +108,8 @@ fun BrowserScreen(
                     onForward = { webViews[activeTabId]?.let { viewModel.goForward(it) } },
                     onTabsClick = { viewModel.toggleTabSwitcher() },
                     onHistoryClick = { viewModel.toggleHistory() },
-                    onBookmarksClick = { viewModel.toggleBookmarks() }
+                    onBookmarksClick = { viewModel.toggleBookmarks() },
+                    onSettingsClick = { viewModel.toggleSettings() }
                 )
             }
         ) { innerPadding ->
@@ -140,6 +145,7 @@ fun BrowserScreen(
                         onCloseSwitcher = { viewModel.toggleTabSwitcher() }
                     )
                 }
+
                 is ScreenType.History -> {
                     HistoryScreen(
                         historyItems = historyItems,
@@ -152,6 +158,7 @@ fun BrowserScreen(
                         onBack = { viewModel.toggleHistory() }
                     )
                 }
+
                 is ScreenType.Bookmarks -> {
                     BookmarksScreen(
                         bookmarks = bookmarkItems,
@@ -163,6 +170,14 @@ fun BrowserScreen(
                         onBack = { viewModel.toggleBookmarks() }
                     )
                 }
+
+                is ScreenType.Settings -> {
+                    SettingsScreen(
+                        viewModel = viewModel,
+                        onBack = { viewModel.toggleSettings() }
+                    )
+                }
+
                 is ScreenType.Browser -> {
                 }
             }

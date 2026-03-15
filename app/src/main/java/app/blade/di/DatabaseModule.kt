@@ -5,6 +5,7 @@ import androidx.room.Room
 import app.blade.data.Database
 import app.blade.data.BookmarkDao
 import app.blade.data.HistoryDao
+import app.blade.data.SettingsDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,7 +16,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     @Provides
     @Singleton
     fun provideBladeDatabase(@ApplicationContext context: Context): Database {
@@ -34,5 +34,10 @@ object DatabaseModule {
     @Provides
     fun provideBookmarkDao(database: Database): BookmarkDao {
         return database.bookmarkDao()
+    }
+
+    @Provides
+    fun provideSettingsDao(database: Database): SettingsDao {
+        return database.settingsDao()
     }
 }

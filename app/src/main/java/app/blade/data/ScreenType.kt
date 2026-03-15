@@ -5,4 +5,5 @@ sealed class ScreenType {
     object TabSwitcher : ScreenType()
     object History : ScreenType()
     object Bookmarks : ScreenType()
+    object Settings : ScreenType()
 }
