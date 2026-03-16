@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import java.net.URL
+import java.net.URLEncoder
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,6 +25,18 @@ class BrowserViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val downloadManager: DownloadManager
 ) : ViewModel() {
+
+    private val _searchSuggestions = MutableStateFlow<List<SearchSuggestion>>(emptyList())
+    val searchSuggestions: StateFlow<List<SearchSuggestion>> = _searchSuggestions.asStateFlow()
+
+    data class SearchSuggestion(
+        val text: String,
+        val type: SuggestionType
+    )
+
+    enum class SuggestionType {
+        HISTORY, BOOKMARK, SEARCH
+    }
 
     private val _tabs = MutableStateFlow(listOf(TabInfo()))
     val tabs: StateFlow<List<TabInfo>> = _tabs.asStateFlow()
@@ -153,6 +168,46 @@ class BrowserViewModel @Inject constructor(
 
     fun deleteDownload(download: app.blade.data.DownloadEntity) {
         downloadManager.deleteDownload(download)
+    }
+
+    fun onSearchTextChanged(text: String) {
+        if (text.isBlank()) {
+            _searchSuggestions.value = emptyList()
+            return
+        }
+
+        viewModelScope.launch {
+            val localHistory = repository.searchHistory(text).first().take(3).map {
+                SearchSuggestion(it.url, SuggestionType.HISTORY)
+            }
+            val localBookmarks = repository.searchBookmarks(text).first().take(3).map {
+                SearchSuggestion(it.url, SuggestionType.BOOKMARK)
+            }
+
+            val apiSuggestions = fetchSearchSuggestions(text)
+
+            _searchSuggestions.value =
+                (localBookmarks + localHistory + apiSuggestions).distinctBy { it.text }
+        }
+    }
+
+    private fun fetchSearchSuggestions(query: String): List<SearchSuggestion> {
+        return try {
+            val encodedQuery = URLEncoder.encode(query, "UTF-8")
+            val url =
+                URL("https://suggestqueries.google.com/complete/search?client=firefox&q=$encodedQuery")
+            val connection = url.openConnection()
+            val text = connection.getInputStream().bufferedReader().use { it.readText() }
+            val json = JSONArray(text)
+            val suggestionsJson = json.getJSONArray(1)
+            val list = mutableListOf<SearchSuggestion>()
+            for (i in 0 until suggestionsJson.length()) {
+                list.add(SearchSuggestion(suggestionsJson.getString(i), SuggestionType.SEARCH))
+            }
+            list.take(5)
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
     fun clearDownloads() {

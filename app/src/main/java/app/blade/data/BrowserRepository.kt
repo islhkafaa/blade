@@ -34,4 +34,8 @@ class BrowserRepository @Inject constructor(
             bookmarkDao.insertBookmark(BookmarkEntity(url = url, title = title))
         }
     }
+
+    fun searchHistory(query: String): Flow<List<HistoryEntity>> = historyDao.searchHistory(query)
+    fun searchBookmarks(query: String): Flow<List<BookmarkEntity>> =
+        bookmarkDao.searchBookmarks(query)
 }

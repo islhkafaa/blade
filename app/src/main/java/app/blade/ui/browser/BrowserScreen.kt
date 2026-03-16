@@ -23,10 +23,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.blade.data.ScreenType
 import app.blade.engine.BrowserViewModel
@@ -39,7 +40,8 @@ import app.blade.ui.downloads.DownloadsScreen
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BrowserScreen(
-    viewModel: BrowserViewModel = hiltViewModel()
+    viewModel: BrowserViewModel = hiltViewModel(),
+    onVoiceSearchClick: () -> Unit = {}
 ) {
     val tabs by viewModel.tabs.collectAsStateWithLifecycle()
     val activeTabId by viewModel.activeTabId.collectAsStateWithLifecycle()
@@ -52,6 +54,8 @@ fun BrowserScreen(
     val historyItems by viewModel.history.collectAsStateWithLifecycle(initialValue = emptyList())
     val bookmarkItems by viewModel.bookmarks.collectAsStateWithLifecycle(initialValue = emptyList())
     val downloadItems by viewModel.downloads.collectAsStateWithLifecycle()
+    val searchSuggestions by viewModel.searchSuggestions.collectAsStateWithLifecycle()
+    var isAddressBarFocused by remember { androidx.compose.runtime.mutableStateOf(false) }
 
     val activeTab = remember(tabs, activeTabId) {
         tabs.find { it.id == activeTabId } ?: tabs.first()
@@ -93,6 +97,9 @@ fun BrowserScreen(
                         isBookmarked = activeTab.state.isBookmarked,
                         isLoading = activeTab.state.isLoading,
                         onUrlSubmitted = { input -> viewModel.onUrlInputSubmitted(input) },
+                        onUrlInputChanged = { text -> viewModel.onSearchTextChanged(text) },
+                        onFocusChanged = { focused -> isAddressBarFocused = focused },
+                        onVoiceSearchClick = onVoiceSearchClick,
                         onBookmarkToggle = { viewModel.toggleBookmark() },
                         onReload = { webViews[activeTabId]?.reload() },
                         onStop = { webViews[activeTabId]?.stopLoading() }
@@ -138,6 +145,21 @@ fun BrowserScreen(
                 }
             }
         }
+
+        if (isAddressBarFocused && searchSuggestions.isNotEmpty()) {
+            SearchSuggestionsOverlay(
+                suggestions = searchSuggestions,
+                onSuggestionSelected = { suggestion ->
+                    viewModel.onUrlInputSubmitted(suggestion)
+                    isAddressBarFocused = false
+                },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 64.dp)
+            )
+        }
+
         AnimatedContent(
             targetState = currentScreen,
             transitionSpec = {

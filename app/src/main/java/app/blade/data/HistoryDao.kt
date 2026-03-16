@@ -20,4 +20,7 @@ interface HistoryDao {
 
     @Query("DELETE FROM history")
     suspend fun clearAllHistory()
+
+    @Query("SELECT * FROM history WHERE title LIKE '%' || :query || '%' OR url LIKE '%' || :query || '%' ORDER BY timestamp DESC")
+    fun searchHistory(query: String): Flow<List<HistoryEntity>>
 }

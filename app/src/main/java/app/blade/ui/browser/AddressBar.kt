@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -41,6 +42,9 @@ fun AddressBar(
     isBookmarked: Boolean,
     isLoading: Boolean,
     onUrlSubmitted: (String) -> Unit,
+    onUrlInputChanged: (String) -> Unit,
+    onFocusChanged: (Boolean) -> Unit,
+    onVoiceSearchClick: () -> Unit,
     onBookmarkToggle: () -> Unit,
     onReload: () -> Unit,
     onStop: () -> Unit,
@@ -81,13 +85,17 @@ fun AddressBar(
 
             TextField(
                 value = if (isFocused) textValue else displayUrl,
-                onValueChange = { textValue = it },
+                onValueChange = {
+                    textValue = it
+                    onUrlInputChanged(it)
+                },
                 singleLine = true,
                 modifier = Modifier
                     .weight(1f)
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
                         isFocused = focusState.isFocused
+                        onFocusChanged(focusState.isFocused)
                         if (focusState.isFocused) {
                             textValue = displayUrl
                         }
@@ -110,6 +118,14 @@ fun AddressBar(
                                 imageVector = Icons.Default.Clear,
                                 contentDescription = "Clear",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else if (isFocused && textValue.isEmpty()) {
+                        IconButton(onClick = onVoiceSearchClick) {
+                            Icon(
+                                imageVector = Icons.Default.Mic,
+                                contentDescription = "Voice Search",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     } else {

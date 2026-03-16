@@ -23,4 +23,7 @@ interface BookmarkDao {
 
     @Query("DELETE FROM bookmarks WHERE url = :url")
     suspend fun deleteBookmarkByUrl(url: String)
+
+    @Query("SELECT * FROM bookmarks WHERE title LIKE '%' || :query || '%' OR url LIKE '%' || :query || '%' ORDER BY createdAt DESC")
+    fun searchBookmarks(query: String): Flow<List<BookmarkEntity>>
 }
