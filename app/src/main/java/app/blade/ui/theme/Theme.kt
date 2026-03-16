@@ -79,7 +79,7 @@ private val LightColorScheme = androidx.compose.material3.lightColorScheme(
 @Composable
 fun BladeTheme(
     darkTheme: Boolean = true,
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

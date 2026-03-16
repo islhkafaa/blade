@@ -33,6 +33,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.foundation.border
+
 @Composable
 fun AddressBar(
     displayUrl: String,
@@ -52,14 +54,19 @@ fun AddressBar(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .height(56.dp)
+            .border(
+                width = if (isFocused) 2.dp else 0.dp,
+                color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
+                shape = RoundedCornerShape(28.dp)
+            ),
         shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        tonalElevation = 2.dp
+        color = if (isFocused) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainerHigh,
+        tonalElevation = if (isFocused) 4.dp else 2.dp
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 4.dp)
+            modifier = Modifier.padding(horizontal = 8.dp)
         ) {
             IconButton(onClick = onBookmarkToggle) {
                 Icon(
@@ -92,7 +99,7 @@ fun AddressBar(
                     Icon(
                         imageVector = if (isSearch) Icons.Default.Search else Icons.Default.Lock,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = if (isFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                 },

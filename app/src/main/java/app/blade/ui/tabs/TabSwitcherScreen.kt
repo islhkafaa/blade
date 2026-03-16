@@ -1,5 +1,6 @@
 package app.blade.ui.tabs
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +27,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.blade.engine.TabInfo
@@ -89,17 +94,25 @@ fun TabCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onSelected),
+            .clickable(onClick = onSelected)
+            .border(
+                width = if (isActive) 2.dp else 0.dp,
+                color = if (isActive) MaterialTheme.colorScheme.primary else Color.Transparent,
+                shape = MaterialTheme.shapes.extraLarge
+            ),
         colors = CardDefaults.cardColors(
             containerColor = if (isActive)
                 MaterialTheme.colorScheme.primaryContainer
             else
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isActive) 8.dp else 2.dp
         ),
         shape = MaterialTheme.shapes.extraLarge
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -108,25 +121,30 @@ fun TabCard(
             ) {
                 Text(
                     text = tab.state.title.ifBlank { "New Tab" },
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                 )
-                IconButton(onClick = onClosed) {
+                IconButton(
+                    onClick = onClosed,
+                    modifier = Modifier.size(24.dp)
+                ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close Tab",
-                        modifier = Modifier.padding(4.dp)
+                        tint = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = tab.state.displayUrl,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp)
+                color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

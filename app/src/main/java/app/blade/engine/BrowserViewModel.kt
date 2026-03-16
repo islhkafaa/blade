@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -46,21 +47,23 @@ class BrowserViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            settingsRepository.getSetting(SettingsRepository.KEY_SEARCH_ENGINE, SettingsRepository.VAL_SEARCH_GOOGLE)
-                .collect { currentSearchEngine = it }
+            currentSearchEngine = settingsRepository.getSetting(SettingsRepository.KEY_SEARCH_ENGINE, SettingsRepository.VAL_SEARCH_GOOGLE).first()
         }
     }
 
     fun createNewTab(url: String? = null) {
         viewModelScope.launch {
             val homepage = if (url == null) {
-                var hp = "https://www.google.com"
-                settingsRepository.getSetting(SettingsRepository.KEY_HOME_PAGE, "https://www.google.com")
-                    .collect { hp = it }
-                hp
-            } else url
-
-            val newTab = TabInfo(state = BrowserState(url = homepage))
+                settingsRepository.getSetting(SettingsRepository.KEY_HOME_PAGE, "https://www.google.com").first()
+            } else {
+                url
+            }
+            val newTab = TabInfo(
+                state = BrowserState(
+                    url = homepage,
+                    displayUrl = extractDisplayUrl(homepage)
+                )
+            )
             _tabs.update { it + newTab }
             _activeTabId.value = newTab.id
             hideAllOverlays()

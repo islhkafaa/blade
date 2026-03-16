@@ -8,6 +8,10 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -128,10 +132,16 @@ fun BrowserScreen(
                 }
             }
         }
-
         AnimatedContent(
             targetState = currentScreen,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            transitionSpec = {
+                if (targetState != ScreenType.Browser) {
+                    (slideInVertically { it / 2 } + fadeIn() + scaleIn(initialScale = 0.85f))
+                        .togetherWith(fadeOut() + scaleOut(targetScale = 0.85f))
+                } else {
+                    fadeIn().togetherWith(slideOutVertically { it / 2 } + fadeOut() + scaleOut(targetScale = 0.85f))
+                }
+            },
             label = "overlay_transition"
         ) { screen ->
             when (screen) {
