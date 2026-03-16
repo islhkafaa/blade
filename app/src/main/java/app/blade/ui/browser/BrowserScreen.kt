@@ -126,7 +126,8 @@ fun BrowserScreen(
                     onHistoryClick = { viewModel.toggleHistory() },
                     onBookmarksClick = { viewModel.toggleBookmarks() },
                     onSettingsClick = { viewModel.toggleSettings() },
-                    onDownloadsClick = { viewModel.toggleDownloads() }
+                    onDownloadsClick = { viewModel.toggleDownloads() },
+                    onNewPrivateTabClick = { viewModel.createNewTab(isPrivate = true) }
                 )
             }
         ) { innerPadding ->

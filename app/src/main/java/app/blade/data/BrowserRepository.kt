@@ -38,4 +38,6 @@ class BrowserRepository @Inject constructor(
     fun searchHistory(query: String): Flow<List<HistoryEntity>> = historyDao.searchHistory(query)
     fun searchBookmarks(query: String): Flow<List<BookmarkEntity>> =
         bookmarkDao.searchBookmarks(query)
+
+    suspend fun clearAllBookmarks() = bookmarkDao.clearAllBookmarks()
 }

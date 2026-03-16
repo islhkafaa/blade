@@ -30,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -101,10 +103,11 @@ fun TabCard(
                 shape = MaterialTheme.shapes.extraLarge
             ),
         colors = CardDefaults.cardColors(
-            containerColor = if (isActive)
-                MaterialTheme.colorScheme.primaryContainer
-            else
-                MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = when {
+                isActive -> MaterialTheme.colorScheme.primaryContainer
+                tab.isPrivate -> MaterialTheme.colorScheme.surfaceVariant
+                else -> MaterialTheme.colorScheme.surfaceContainerHigh
+            }
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = if (isActive) 8.dp else 2.dp
@@ -125,8 +128,21 @@ fun TabCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
-                    color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                    color = when {
+                        isActive -> MaterialTheme.colorScheme.onPrimaryContainer
+                        tab.isPrivate -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
                 )
+                if (tab.isPrivate) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.PrivacyTip,
+                        contentDescription = "Private",
+                        tint = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
                 IconButton(
                     onClick = onClosed,
                     modifier = Modifier.size(24.dp)
@@ -134,7 +150,12 @@ fun TabCard(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close Tab",
-                        tint = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = if (isActive)
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        else if (tab.isPrivate)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

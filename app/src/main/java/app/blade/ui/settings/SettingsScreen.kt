@@ -102,6 +102,50 @@ fun SettingsScreen(
                     )
                 }
             }
+            item {
+                PreferenceCategory(title = "Privacy")
+            }
+            item {
+                val isAdBlockEnabled =
+                    settings.find { it.key == SettingsRepository.KEY_AD_BLOCK }?.value == "true"
+                PreferenceSwitch(
+                    title = "Ad-Blocker",
+                    summary = "Block known intrusive advertisements",
+                    checked = isAdBlockEnabled,
+                    onCheckedChange = {
+                        viewModel.updateSetting(SettingsRepository.KEY_AD_BLOCK, it.toString())
+                    }
+                )
+            }
+            item {
+                var showClearDialog by remember { mutableStateOf(false) }
+
+                PreferenceItem(
+                    title = "Clear All Data",
+                    summary = "Delete history, bookmarks, and downloads",
+                    onClick = { showClearDialog = true }
+                )
+
+                if (showClearDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showClearDialog = false },
+                        title = { Text("Clear Data") },
+                        text = { Text("This will permanently delete your browsing history, bookmarks, and download list. This action cannot be undone.") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    viewModel.clearAllData()
+                                    showClearDialog = false
+                                },
+                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                            ) { Text("Clear All") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showClearDialog = false }) { Text("Cancel") }
+                        }
+                    )
+                }
+            }
         }
     }
 
@@ -209,5 +253,31 @@ fun PreferenceItem(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable
+fun PreferenceSwitch(
+    title: String,
+    summary: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

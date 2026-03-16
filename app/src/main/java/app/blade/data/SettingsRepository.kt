@@ -23,7 +23,8 @@ class SettingsRepository @Inject constructor(
         const val KEY_SEARCH_ENGINE = "search_engine"
         const val KEY_HOME_PAGE = "home_page"
         const val KEY_DARK_MODE = "dark_mode"
-        
+        const val KEY_AD_BLOCK = "ad_block"
+
         const val VAL_SEARCH_GOOGLE = "https://www.google.com/search?q="
         const val VAL_SEARCH_DUCKDUCKGO = "https://duckduckgo.com/?q="
         const val VAL_SEARCH_BING = "https://www.bing.com/search?q="

@@ -66,9 +66,18 @@ class BrowserViewModel @Inject constructor(
     val bookmarks = repository.allBookmarks
     val settingsRepo = settingsRepository
 
+    private val _isAdBlockEnabled = MutableStateFlow(true)
+    val isAdBlockEnabled: StateFlow<Boolean> = _isAdBlockEnabled.asStateFlow()
+
     private var currentSearchEngine = SettingsRepository.VAL_SEARCH_GOOGLE
 
     init {
+        viewModelScope.launch {
+            settingsRepository.getSetting(
+                SettingsRepository.KEY_AD_BLOCK,
+                "true"
+            ).collect { _isAdBlockEnabled.value = it == "true" }
+        }
         viewModelScope.launch {
             currentSearchEngine = settingsRepository.getSetting(
                 SettingsRepository.KEY_SEARCH_ENGINE,
@@ -77,7 +86,7 @@ class BrowserViewModel @Inject constructor(
         }
     }
 
-    fun createNewTab(url: String? = null) {
+    fun createNewTab(url: String? = null, isPrivate: Boolean = false) {
         viewModelScope.launch {
             val homepage = url
                 ?: settingsRepository.getSetting(
@@ -85,6 +94,7 @@ class BrowserViewModel @Inject constructor(
                     "https://www.google.com"
                 ).first()
             val newTab = TabInfo(
+                isPrivate = isPrivate,
                 state = BrowserState(
                     url = homepage,
                     displayUrl = extractDisplayUrl(homepage)
@@ -214,6 +224,14 @@ class BrowserViewModel @Inject constructor(
         downloadManager.clearAll()
     }
 
+    fun clearAllData() {
+        viewModelScope.launch {
+            repository.clearHistory()
+            repository.clearAllBookmarks()
+            downloadManager.clearAll()
+        }
+    }
+
     fun onUrlInputSubmitted(input: String) {
         val normalized = normalizeInput(input)
         updateActiveTab { it.copy(url = normalized) }
@@ -244,7 +262,10 @@ class BrowserViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            repository.saveVisit(url, title)
+            val currentTab = _tabs.value.find { it.id == activeTabId.value }
+            if (currentTab?.isPrivate != true) {
+                repository.saveVisit(url, title)
+            }
             val bookmarked = repository.isBookmarked(url)
             updateActiveTab { it.copy(isBookmarked = bookmarked) }
         }

@@ -26,4 +26,7 @@ interface BookmarkDao {
 
     @Query("SELECT * FROM bookmarks WHERE title LIKE '%' || :query || '%' OR url LIKE '%' || :query || '%' ORDER BY createdAt DESC")
     fun searchBookmarks(query: String): Flow<List<BookmarkEntity>>
+
+    @Query("DELETE FROM bookmarks")
+    suspend fun clearAllBookmarks()
 }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tab
@@ -52,6 +53,7 @@ fun BottomNavBar(
     onBookmarksClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onDownloadsClick: () -> Unit,
+    onNewPrivateTabClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -150,6 +152,12 @@ fun BottomNavBar(
                         showMenu = false
                         onDownloadsClick()
                     }
+                },
+                onNewPrivateTabClick = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        showMenu = false
+                        onNewPrivateTabClick()
+                    }
                 }
             )
         }
@@ -161,7 +169,8 @@ fun BrowserMenuContent(
     onBookmarksClick: () -> Unit,
     onHistoryClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onDownloadsClick: () -> Unit
+    onDownloadsClick: () -> Unit,
+    onNewPrivateTabClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -173,6 +182,24 @@ fun BrowserMenuContent(
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
             color = MaterialTheme.colorScheme.primary
+        )
+
+        ListItem(
+            headlineContent = { Text("New Private Tab") },
+            leadingContent = {
+                Icon(
+                    Icons.Default.PrivacyTip,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            modifier = Modifier.clickable(onClick = onNewPrivateTabClick),
+            colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+        )
+
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+            color = MaterialTheme.colorScheme.outlineVariant
         )
 
         ListItem(

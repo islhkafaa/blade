@@ -45,6 +45,7 @@ fun WebViewContainer(
             }
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
             webViewClient = WebViewClient(
+                isAdBlockEnabled = { viewModel.isAdBlockEnabled.value },
                 onPageStarted = { u -> viewModel.onPageStarted(u) },
                 onPageFinished = { u, wv -> viewModel.onPageFinished(u, wv) }
             )
