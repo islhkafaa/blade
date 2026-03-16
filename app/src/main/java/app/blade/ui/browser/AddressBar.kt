@@ -1,5 +1,6 @@
 package app.blade.ui.browser
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -48,12 +49,12 @@ fun AddressBar(
     onBookmarkToggle: () -> Unit,
     onReload: () -> Unit,
     onStop: () -> Unit,
-    modifier: Modifier = Modifier
+    addressBarFocusRequester: FocusRequester = remember { FocusRequester() },
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     var isFocused by remember { mutableStateOf(false) }
     var textValue by remember(displayUrl) { mutableStateOf(displayUrl) }
     val focusManager = LocalFocusManager.current
-    val focusRequester = remember { FocusRequester() }
 
     Surface(
         modifier = modifier
@@ -92,7 +93,7 @@ fun AddressBar(
                 singleLine = true,
                 modifier = Modifier
                     .weight(1f)
-                    .focusRequester(focusRequester)
+                    .focusRequester(addressBarFocusRequester)
                     .onFocusChanged { focusState ->
                         isFocused = focusState.isFocused
                         onFocusChanged(focusState.isFocused)

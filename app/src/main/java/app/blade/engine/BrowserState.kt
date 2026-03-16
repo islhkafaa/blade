@@ -1,8 +1,8 @@
 package app.blade.engine
 
 data class BrowserState(
-    val url: String = "https://www.google.com",
-    val displayUrl: String = "www.google.com",
+    val url: String = "",
+    val displayUrl: String = "",
     val title: String = "",
     val progress: Int = 0,
     val isLoading: Boolean = false,

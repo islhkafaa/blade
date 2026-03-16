@@ -44,6 +44,15 @@ class BrowserViewModel @Inject constructor(
     private val _activeTabId = MutableStateFlow(_tabs.value.first().id)
     val activeTabId: StateFlow<String> = _activeTabId.asStateFlow()
 
+    private val _shortcuts = MutableStateFlow(emptyList<Shortcut>())
+    val shortcuts: StateFlow<List<Shortcut>> = _shortcuts.asStateFlow()
+
+    data class Shortcut(
+        val title: String,
+        val url: String,
+        val iconRes: Int? = null
+    )
+
     private val _isTabSwitcherVisible = MutableStateFlow(false)
     val isTabSwitcherVisible: StateFlow<Boolean> = _isTabSwitcherVisible.asStateFlow()
 
@@ -84,26 +93,30 @@ class BrowserViewModel @Inject constructor(
                 SettingsRepository.VAL_SEARCH_GOOGLE
             ).first()
         }
+
+        _shortcuts.value = listOf(
+            Shortcut("Google", "https://www.google.com"),
+            Shortcut("YouTube", "https://www.youtube.com"),
+            Shortcut("GitHub", "https://github.com"),
+            Shortcut("Reddit", "https://www.reddit.com"),
+            Shortcut("Facebook", "https://www.facebook.com"),
+            Shortcut("Twitter", "https://www.twitter.com"),
+            Shortcut("Wikipedia", "https://www.wikipedia.org"),
+            Shortcut("Amazon", "https://www.amazon.com")
+        )
     }
 
     fun createNewTab(url: String? = null, isPrivate: Boolean = false) {
-        viewModelScope.launch {
-            val homepage = url
-                ?: settingsRepository.getSetting(
-                    SettingsRepository.KEY_HOME_PAGE,
-                    "https://www.google.com"
-                ).first()
-            val newTab = TabInfo(
-                isPrivate = isPrivate,
-                state = BrowserState(
-                    url = homepage,
-                    displayUrl = extractDisplayUrl(homepage)
-                )
+        val newTab = TabInfo(
+            isPrivate = isPrivate,
+            state = BrowserState(
+                url = url ?: "",
+                displayUrl = if (url != null) extractDisplayUrl(url) else ""
             )
-            _tabs.update { it + newTab }
-            _activeTabId.value = newTab.id
-            hideAllOverlays()
-        }
+        )
+        _tabs.update { it + newTab }
+        _activeTabId.value = newTab.id
+        hideAllOverlays()
     }
 
     private fun hideAllOverlays() {

@@ -36,6 +36,8 @@ import app.blade.ui.history.HistoryScreen
 import app.blade.ui.bookmarks.BookmarksScreen
 import app.blade.ui.settings.SettingsScreen
 import app.blade.ui.downloads.DownloadsScreen
+import app.blade.ui.home.HomeScreen
+import androidx.compose.ui.focus.FocusRequester
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -55,7 +57,9 @@ fun BrowserScreen(
     val bookmarkItems by viewModel.bookmarks.collectAsStateWithLifecycle(initialValue = emptyList())
     val downloadItems by viewModel.downloads.collectAsStateWithLifecycle()
     val searchSuggestions by viewModel.searchSuggestions.collectAsStateWithLifecycle()
+    val shortcuts by viewModel.shortcuts.collectAsStateWithLifecycle()
     var isAddressBarFocused by remember { androidx.compose.runtime.mutableStateOf(false) }
+    val addressBarFocusRequester = remember { FocusRequester() }
 
     val activeTab = remember(tabs, activeTabId) {
         tabs.find { it.id == activeTabId } ?: tabs.first()
@@ -97,6 +101,7 @@ fun BrowserScreen(
                         isBookmarked = activeTab.state.isBookmarked,
                         isLoading = activeTab.state.isLoading,
                         onUrlSubmitted = { input -> viewModel.onUrlInputSubmitted(input) },
+                        addressBarFocusRequester = addressBarFocusRequester,
                         onUrlInputChanged = { text -> viewModel.onSearchTextChanged(text) },
                         onFocusChanged = { focused -> isAddressBarFocused = focused },
                         onVoiceSearchClick = onVoiceSearchClick,
@@ -135,13 +140,26 @@ fun BrowserScreen(
                 tabs.forEach { tab ->
                     val isVisible = tab.id == activeTabId
                     Box(modifier = Modifier.fillMaxSize()) {
-                        WebViewContainer(
-                            url = tab.state.url,
-                            viewModel = viewModel,
-                            onWebViewCreated = { wv -> webViews[tab.id] = wv },
-                            modifier = Modifier.fillMaxSize(),
-                            isVisible = isVisible
-                        )
+                        if (tab.state.url.isEmpty()) {
+                            if (isVisible) {
+                                HomeScreen(
+                                    shortcuts = shortcuts,
+                                    onSearchClick = {
+                                        isAddressBarFocused = true
+                                        addressBarFocusRequester.requestFocus()
+                                    },
+                                    onShortcutClick = { url -> viewModel.onUrlInputSubmitted(url) }
+                                )
+                            }
+                        } else {
+                            WebViewContainer(
+                                url = tab.state.url,
+                                viewModel = viewModel,
+                                onWebViewCreated = { wv -> webViews[tab.id] = wv },
+                                modifier = Modifier.fillMaxSize(),
+                                isVisible = isVisible
+                            )
+                        }
                     }
                 }
             }

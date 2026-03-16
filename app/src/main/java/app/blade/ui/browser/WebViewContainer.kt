@@ -59,21 +59,20 @@ fun WebViewContainer(
         }
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(url) {
         onWebViewCreated(webView)
-        if (webView.url == null) {
+        if (webView.url == null && url.isNotEmpty()) {
             webView.loadUrl(url)
         }
         onDispose {
-            webView.destroy()
         }
     }
 
     AndroidView(
         factory = { webView },
         update = { wv ->
-            wv.visibility = if (isVisible) View.VISIBLE else View.GONE
-            if (isVisible && wv.url != url) {
+            wv.visibility = if (isVisible && url.isNotEmpty()) View.VISIBLE else View.GONE
+            if (isVisible && url.isNotEmpty() && wv.url != url) {
                 wv.loadUrl(url)
             }
         },
