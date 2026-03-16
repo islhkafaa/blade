@@ -34,6 +34,7 @@ import app.blade.ui.tabs.TabSwitcherScreen
 import app.blade.ui.history.HistoryScreen
 import app.blade.ui.bookmarks.BookmarksScreen
 import app.blade.ui.settings.SettingsScreen
+import app.blade.ui.downloads.DownloadsScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -46,9 +47,11 @@ fun BrowserScreen(
     val isHistoryVisible by viewModel.isHistoryVisible.collectAsStateWithLifecycle()
     val isBookmarksVisible by viewModel.isBookmarksVisible.collectAsStateWithLifecycle()
     val isSettingsVisible by viewModel.isSettingsVisible.collectAsStateWithLifecycle()
+    val isDownloadsVisible by viewModel.isDownloadsVisible.collectAsStateWithLifecycle()
 
     val historyItems by viewModel.history.collectAsStateWithLifecycle(initialValue = emptyList())
     val bookmarkItems by viewModel.bookmarks.collectAsStateWithLifecycle(initialValue = emptyList())
+    val downloadItems by viewModel.downloads.collectAsStateWithLifecycle()
 
     val activeTab = remember(tabs, activeTabId) {
         tabs.find { it.id == activeTabId } ?: tabs.first()
@@ -61,6 +64,7 @@ fun BrowserScreen(
         isHistoryVisible -> ScreenType.History
         isBookmarksVisible -> ScreenType.Bookmarks
         isSettingsVisible -> ScreenType.Settings
+        isDownloadsVisible -> ScreenType.Downloads
         else -> ScreenType.Browser
     }
 
@@ -70,6 +74,7 @@ fun BrowserScreen(
             is ScreenType.History -> viewModel.toggleHistory()
             is ScreenType.Bookmarks -> viewModel.toggleBookmarks()
             is ScreenType.Settings -> viewModel.toggleSettings()
+            is ScreenType.Downloads -> viewModel.toggleDownloads()
             is ScreenType.Browser -> webViews[activeTabId]?.goBack()
         }
     }
@@ -113,7 +118,8 @@ fun BrowserScreen(
                     onTabsClick = { viewModel.toggleTabSwitcher() },
                     onHistoryClick = { viewModel.toggleHistory() },
                     onBookmarksClick = { viewModel.toggleBookmarks() },
-                    onSettingsClick = { viewModel.toggleSettings() }
+                    onSettingsClick = { viewModel.toggleSettings() },
+                    onDownloadsClick = { viewModel.toggleDownloads() }
                 )
             }
         ) { innerPadding ->
@@ -139,7 +145,9 @@ fun BrowserScreen(
                     (slideInVertically { it / 2 } + fadeIn() + scaleIn(initialScale = 0.85f))
                         .togetherWith(fadeOut() + scaleOut(targetScale = 0.85f))
                 } else {
-                    fadeIn().togetherWith(slideOutVertically { it / 2 } + fadeOut() + scaleOut(targetScale = 0.85f))
+                    fadeIn().togetherWith(slideOutVertically { it / 2 } + fadeOut() + scaleOut(
+                        targetScale = 0.85f
+                    ))
                 }
             },
             label = "overlay_transition"
@@ -185,6 +193,15 @@ fun BrowserScreen(
                     SettingsScreen(
                         viewModel = viewModel,
                         onBack = { viewModel.toggleSettings() }
+                    )
+                }
+
+                is ScreenType.Downloads -> {
+                    DownloadsScreen(
+                        downloads = downloadItems,
+                        onDelete = { viewModel.deleteDownload(it) },
+                        onClearAll = { viewModel.clearDownloads() },
+                        onBack = { viewModel.toggleDownloads() }
                     )
                 }
 

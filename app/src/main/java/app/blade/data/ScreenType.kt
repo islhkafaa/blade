@@ -6,4 +6,5 @@ sealed class ScreenType {
     object History : ScreenType()
     object Bookmarks : ScreenType()
     object Settings : ScreenType()
+    object Downloads : ScreenType()
 }

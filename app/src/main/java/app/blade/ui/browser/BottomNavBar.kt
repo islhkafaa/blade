@@ -51,6 +51,7 @@ fun BottomNavBar(
     onHistoryClick: () -> Unit,
     onBookmarksClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onDownloadsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -143,6 +144,12 @@ fun BottomNavBar(
                         showMenu = false
                         onSettingsClick()
                     }
+                },
+                onDownloadsClick = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        showMenu = false
+                        onDownloadsClick()
+                    }
                 }
             )
         }
@@ -153,7 +160,8 @@ fun BottomNavBar(
 fun BrowserMenuContent(
     onBookmarksClick: () -> Unit,
     onHistoryClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onDownloadsClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -202,7 +210,7 @@ fun BrowserMenuContent(
                     tint = MaterialTheme.colorScheme.primary
                 )
             },
-            modifier = Modifier.clickable { /* TODO */ },
+            modifier = Modifier.clickable(onClick = onDownloadsClick),
             colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         )
 

@@ -6,6 +6,7 @@ import app.blade.data.Database
 import app.blade.data.BookmarkDao
 import app.blade.data.HistoryDao
 import app.blade.data.SettingsDao
+import app.blade.data.DownloadDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,7 +24,7 @@ object DatabaseModule {
             context,
             Database::class.java,
             "blade_database"
-        ).build()
+        ).fallbackToDestructiveMigration(false).build()
     }
 
     @Provides
@@ -39,5 +40,10 @@ object DatabaseModule {
     @Provides
     fun provideSettingsDao(database: Database): SettingsDao {
         return database.settingsDao()
+    }
+
+    @Provides
+    fun provideDownloadDao(database: Database): DownloadDao {
+        return database.downloadDao()
     }
 }

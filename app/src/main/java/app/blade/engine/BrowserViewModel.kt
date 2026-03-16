@@ -7,9 +7,11 @@ import app.blade.data.BrowserRepository
 import app.blade.data.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -39,6 +41,12 @@ class BrowserViewModel @Inject constructor(
     private val _isSettingsVisible = MutableStateFlow(false)
     val isSettingsVisible: StateFlow<Boolean> = _isSettingsVisible.asStateFlow()
 
+    private val _isDownloadsVisible = MutableStateFlow(false)
+    val isDownloadsVisible: StateFlow<Boolean> = _isDownloadsVisible.asStateFlow()
+
+    val downloads: StateFlow<List<app.blade.data.DownloadEntity>> = downloadManager.downloads
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val history = repository.allHistory
     val bookmarks = repository.allBookmarks
     val settingsRepo = settingsRepository
@@ -47,17 +55,20 @@ class BrowserViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            currentSearchEngine = settingsRepository.getSetting(SettingsRepository.KEY_SEARCH_ENGINE, SettingsRepository.VAL_SEARCH_GOOGLE).first()
+            currentSearchEngine = settingsRepository.getSetting(
+                SettingsRepository.KEY_SEARCH_ENGINE,
+                SettingsRepository.VAL_SEARCH_GOOGLE
+            ).first()
         }
     }
 
     fun createNewTab(url: String? = null) {
         viewModelScope.launch {
-            val homepage = if (url == null) {
-                settingsRepository.getSetting(SettingsRepository.KEY_HOME_PAGE, "https://www.google.com").first()
-            } else {
-                url
-            }
+            val homepage = url
+                ?: settingsRepository.getSetting(
+                    SettingsRepository.KEY_HOME_PAGE,
+                    "https://www.google.com"
+                ).first()
             val newTab = TabInfo(
                 state = BrowserState(
                     url = homepage,
@@ -75,6 +86,7 @@ class BrowserViewModel @Inject constructor(
         _isHistoryVisible.value = false
         _isBookmarksVisible.value = false
         _isSettingsVisible.value = false
+        _isDownloadsVisible.value = false
     }
 
     fun closeTab(tabId: String) {
@@ -125,7 +137,26 @@ class BrowserViewModel @Inject constructor(
             _isTabSwitcherVisible.value = false
             _isHistoryVisible.value = false
             _isBookmarksVisible.value = false
+            _isDownloadsVisible.value = false
         }
+    }
+
+    fun toggleDownloads() {
+        _isDownloadsVisible.update { !it }
+        if (_isDownloadsVisible.value) {
+            _isTabSwitcherVisible.value = false
+            _isHistoryVisible.value = false
+            _isBookmarksVisible.value = false
+            _isSettingsVisible.value = false
+        }
+    }
+
+    fun deleteDownload(download: app.blade.data.DownloadEntity) {
+        downloadManager.deleteDownload(download)
+    }
+
+    fun clearDownloads() {
+        downloadManager.clearAll()
     }
 
     fun onUrlInputSubmitted(input: String) {
@@ -205,7 +236,12 @@ class BrowserViewModel @Inject constructor(
         }
     }
 
-    fun downloadFile(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
+    fun downloadFile(
+        url: String,
+        userAgent: String?,
+        contentDisposition: String?,
+        mimeType: String?
+    ) {
         downloadManager.downloadFile(url, userAgent, contentDisposition, mimeType)
     }
 

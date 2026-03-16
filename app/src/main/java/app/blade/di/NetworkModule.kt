@@ -10,6 +10,8 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import javax.inject.Singleton
 
+import app.blade.data.DownloadDao
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -23,8 +25,9 @@ object NetworkModule {
     @Singleton
     fun provideDownloadManager(
         @ApplicationContext context: Context,
-        okHttpClient: OkHttpClient
+        okHttpClient: OkHttpClient,
+        downloadDao: DownloadDao
     ): DownloadManager {
-        return DownloadManager(context, okHttpClient)
+        return DownloadManager(context, okHttpClient, downloadDao)
     }
 }
